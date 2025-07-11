@@ -54,10 +54,6 @@ export default {
       validator: function (value) {
         return Boolean(value.match(/^[a-z0-9-]+$/i));
       }
-    },
-    collection: {
-      type: Boolean,
-      default: false
     }
   },
   data() {
@@ -70,10 +66,7 @@ export default {
   },
   computed: {
     type() {
-      if (this.collection) {
-        return "Collection"
-      }
-      else if (this.data.isApi) {
+      if (this.data.isApi) {
         return "API";
       }
       else {
@@ -86,7 +79,7 @@ export default {
   },
   async mounted() {
     try {
-      let endpoint = (this.data ? '/collections/' : '/catalogs/') + this.id
+      let endpoint = '/catalogs/' + this.id
       let response = await this.$axios.get(endpoint);
       if (!isPlainObject(response.data)) {
         this.data = "Information retrieved from the server are invalid.";

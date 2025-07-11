@@ -3,6 +3,10 @@
     <h1>Add a new STAC Resource</h1>
     <b-alert v-if="typeof error === 'string'" variant="danger" show>{{ error }}</b-alert>
     <b-alert v-else-if="typeof confirmation === 'string'" :variant="urlHintType" show>{{ confirmation }}</b-alert>
+    <b-alert v-else variant="warning" show>
+      The data entered here will be stored in the STAC Index and made publicly available immediately after submission without further review.<br />
+      Please make sure that the data you provide is correct and meaningful.
+    </b-alert>
     <b-form @submit="onSubmit">
       <h5>What do you want to add?</h5>
       <b-form-group>
@@ -30,7 +34,7 @@
         <b-form-group v-if="fields.includes('summary')" label="Summary:" label-for="summary">
           <b-form-textarea id="summary" v-model="summary" rows="3" required minlength="50" maxlength="300"></b-form-textarea>
           <b-form-text>
-            Short summary about the {{ formTitle }}. Min. 50 chars, max. 300 chars.
+            Short summary about the {{ formTitle }}. Min. 50 chars, max. 300 chars, currently {{ summary ? summary.length : 0 }} chars.
             <template v-if="type !== 'tutorial'">
               One CommonMark (Markdown) style link allowed.
             </template>
@@ -53,14 +57,6 @@
           <b-form-text>This should be the main programming language.</b-form-text>
         </b-form-group>
         </template>
-        <b-form-group v-if="fields.includes('extensions')" label="Supported STAC Extensions:" label-for="extensions">
-          <multiselect v-model="extensions" :options="allExtensions" :multiple="true" :taggable="true" trackBy="id" label="label"></multiselect>
-          <b-form-text>Optional.</b-form-text>
-        </b-form-group>
-        <b-form-group v-if="fields.includes('apiExtensions')" label="Supported STAC API Extensions:" label-for="apiExtensions">
-          <multiselect v-model="apiExtensions" :options="allApiExtensions" :multiple="true" :taggable="true" trackBy="id" label="label"></multiselect>
-          <b-form-text>Optional.</b-form-text>
-        </b-form-group>
         <b-form-group v-if="fields.includes('email')" label="Contact e-mail:" label-for="email">
           <b-form-input id="email" type="email" v-model="email"></b-form-input>
           <b-form-text>Optional. Not publicly displayed. Just used to contact you in case we have questions regarding your submission.</b-form-text>
@@ -94,7 +90,7 @@
 import Multiselect from 'vue-multiselect';
 import slugify from 'slugify';
 import isPlainObject from 'lodash/isPlainObject';
-import { EXTENSIONS, API_EXTENSIONS, CATEGORIES } from '../../../commons';
+import { CATEGORIES } from '../../../commons';
 
 export default {
   name: 'Add',
@@ -113,8 +109,6 @@ export default {
       spokenLanguageList: [],
       categoryList: CATEGORIES,
       allTags: [],
-      allExtensions: this.prepareMultiselect(EXTENSIONS),
-      allApiExtensions: this.prepareMultiselect(API_EXTENSIONS),
       error: null,
       confirmation: null,
       type: null,
@@ -125,8 +119,6 @@ export default {
       language: null,
       categories: [],
       tags: [],
-      extensions: [],
-      apiExtensions: [],
       access: 'public',
       accessInfo: null,
       email: null,
@@ -154,18 +146,31 @@ export default {
           }
         }
 
+        if (catalog.conformsTo && this.type === 'catalog') {
+            this.urlHint = "The link provided seems to be a STAC API, but you have selected 'Static Catalog'. Changed the selection to 'API'. Please ensure to pick the correct type.";
+            this.urlHintType = "warning";
+            this.type = 'api';
+        }
+        else if (!catalog.conformsTo && this.type === 'api') {
+            this.urlHint = "The link provided seems to be a static STAC catalog, but you have selected 'API'. Changed the selection to 'Static Catalog'. Please ensure to pick the correct type.";
+            this.urlHintType = "warning";
+            this.type = 'catalog';
+        }
+
         if (isPlainObject(catalog.data) && typeof catalog.data.id === 'string' && typeof catalog.data.description === 'string' && Array.isArray(catalog.data.links)) {
           if (this.access === 'private') {
             this.access = 'protected';
           }
-          if (typeof catalog.data.title === 'string' && !this.title) {
+          if (typeof catalog.data.title === 'string' && !this.title && catalog.data.title !== 'stac-fastapi') {
             this.title = catalog.data.title;
           }
           if (typeof catalog.data.description === 'string' && !this.summary) {
             this.summary = catalog.data.description;
           }
-          this.urlHint = "Catalog found. Inserting some data from the catalog for you...";
-          this.urlHintType = "success";
+          if (this.urlHintType === 'info') {
+            this.urlHint = "Catalog found. Inserting some data from the catalog for you...";
+            this.urlHintType = "success";
+          }
         }
         else {
           this.urlHint = "The link provided doesn't seem to be a valid catalog. Are you sure the URL is correct? Is the catalog private? Setting the API as 'private' for you...";
@@ -219,8 +224,6 @@ export default {
       else if (this.type === 'ecosystem') {
         fields.push('language');
         fields.push('categories');
-        fields.push('extensions');
-        fields.push('apiExtensions');
       }
       else if (this.type === 'tutorial') {
         fields.push('language');
@@ -285,8 +288,6 @@ export default {
       this.accessInfo = null;
       this.email = null;
       this.customSlug = false;
-      this.extensions = [];
-      this.apiExtensions = [];
     },
     async onSubmit(evt) {
       evt.preventDefault();
@@ -321,8 +322,6 @@ export default {
         access: this.access,
         accessInfo: this.accessInfo,
         email: this.email,
-        extensions: this.extensions.map(e => e.id),
-        apiExtensions: this.apiExtensions.map(e => e.id)
       };
     }
   }

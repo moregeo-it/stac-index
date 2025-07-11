@@ -1,37 +1,3 @@
-const API_EXTENSIONS = {
-	"features": "OGC API - Features",
-	"features-transactions": "OGC API - Features - Transactions",
-	"features-versioning": "OGC API - Features - Versioning",
-	"item-search": "Item Search",
-	"item-search-context": "Item Search - Context",
-	"item-search-fields": "Item Search - Fields",
-	"item-search-filter": "Item Search - Filter",
-	"item-search-query": "Item Search - Query (deprecated)",
-	"item-search-sort": "Item Search - Sort"
-};
-const EXTENSIONS = {
-	"checksum": "Checksum (deprecated)",
-	"collection-assets": "Collection Assets",
-	"datacube": "Data Cube",
-	"eo": "Electro-Optical",
-	"file": "File",
-	"item-assets": "Item Asset Definition",
-	"label": "Label",
-	"mgrs": "MGRS",
-	"pointcloud": "Point Cloud",
-	"processing": "Processing",
-	"projection": "Projection",
-	"raster": "Raster",
-	"sar": "SAR",
-	"sat": "Satellite",
-	"scientific": "Scientific",
-	"single-file-stac": "Single File STAC",
-	"storage": "Cloud Storage",
-	"tiled-asstes": "Tiled Assets",
-	"timestamps": "Timestamps",
-	"version": "Versioning Indicators",
-	"view": "View Geometry"
-};
 const CATEGORIES = [
 	'API',
 	'CLI',
@@ -64,8 +30,6 @@ const DATABASE = {
 
 module.exports = {
 	LINK_REGEXP,
-	EXTENSIONS,
-	API_EXTENSIONS,
 	CATEGORIES,
 	DEV,
 	HTTP_HOST,

@@ -15,16 +15,6 @@
         <b-nav-item :active="!language" :to="uri({language: null})">All</b-nav-item>
         <b-nav-item v-for="lang in languages" :key="lang" :active="language === lang" :to="uri({language: lang})">{{ lang }}</b-nav-item>
       </b-nav>
-      <h6>Filter by STAC Extension</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!extension" :to="uri({extension: null})">All</b-nav-item>
-        <b-nav-item v-for="ext in extensions" :key="ext.key" :active="extension === ext.key" :to="uri({extension: ext.key})">{{ ext.value }}</b-nav-item>
-      </b-nav>
-      <h6>Filter by STAC API Extension</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!apiExtension" :to="uri({apiExtension: null})">All</b-nav-item>
-        <b-nav-item v-for="ext in apiExtensions" :key="ext.key" :active="apiExtension === ext.key" :to="uri({apiExtension: ext.key})">{{ ext.value }}</b-nav-item>
-      </b-nav>
       <hr />
       <b-alert v-if="filtered.length === 0" show>No tool or software found.</b-alert>
       <b-list-group v-else>
@@ -35,7 +25,6 @@
 </template>
 
 <script>
-import { EXTENSIONS, API_EXTENSIONS } from '../../../commons';
 import EcosystemItem from './EcosystemItem.vue';
 
 export default {
@@ -49,14 +38,6 @@ export default {
       default: ""
     },
     category: {
-      type: String,
-      default: ""
-    },
-    extension: {
-      type: String,
-      default: ""
-    },
-    apiExtension: {
       type: String,
       default: ""
     }
@@ -79,12 +60,6 @@ export default {
         if (this.language && eco.language !== this.language) {
           return false;
         }
-        if (this.extension && !eco.extensions.includes(this.extension)) {
-          return false;
-        }
-        if (this.apiExtension && !eco.apiExtensions.includes(this.apiExtension)) {
-          return false;
-        }
 
         return true;
       });
@@ -94,12 +69,6 @@ export default {
     },
     categories() {
       return this.unique("categories");
-    },
-    extensions() {
-      return this.unique("extensions", EXTENSIONS);
-    },
-    apiExtensions() {
-      return this.unique("apiExtensions", API_EXTENSIONS);
     }
   },
   async created() {

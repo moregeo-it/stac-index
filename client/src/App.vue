@@ -18,7 +18,7 @@
           </b-navbar-nav>
 
           <b-navbar-nav class="ml-auto">
-            <b-nav-item href="https://twitter.com/stacindex" target="_blank"><b-icon icon="twitter" /></b-nav-item>
+            <b-nav-item href="https://bsky.app/profile/stacindex.org" target="_blank"><b-icon icon="share" /> BlueSky</b-nav-item>
             <b-nav-item to="/contact"><b-icon icon="envelope-fill" /> Contact</b-nav-item>
             <b-nav-item to="/privacy"><b-icon icon="exclamation-triangle-fill" /> Privacy Policy</b-nav-item>
           </b-navbar-nav>

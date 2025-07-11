@@ -30,7 +30,7 @@
 import DataItem from './DataItem.vue';
 
 export default {
-  name: 'Collections',
+  name: 'Catalogs',
   components: {
     DataItem
   },

@@ -11,20 +11,11 @@
       Categories:
       <b-badge v-for="cat in categories" :key="cat">{{ cat }}</b-badge>
     </small>
-    <small v-if="extensions.length">
-      <br />Supported Extensions:
-      <b-badge v-for="ext in extensions" :key="ext">{{ ext }}</b-badge>
-    </small>
-    <small v-if="apiExtensions.length">
-      <br />Supported API Extensions:
-      <b-badge v-for="ext in apiExtensions" :key="ext">{{ ext }}</b-badge>
-    </small>
   </b-list-group-item>
 </template>
 
 <script>
 import Utils from '../utils';
-import { EXTENSIONS, API_EXTENSIONS } from '../../../commons';
 
 export default {
   name: 'EcosystemItem',
@@ -36,21 +27,9 @@ export default {
   computed: {
     categories() {
       return this.data.categories.sort();
-    },
-    extensions() {
-      return this.formatExtensions(this.data.extensions, EXTENSIONS).sort();
-    },
-    apiExtensions() {
-      return this.formatExtensions(this.data.apiExtensions, API_EXTENSIONS).sort();
     }
   },
   methods: {
-    formatExtensions(ext, list) {
-      if (Array.isArray(ext) && ext.length > 0) {
-        return ext.map(e => list[e] || null).filter(e => e !== null);
-      }
-      return [];
-    },
     parseLink(text) {
       return Utils.parseLink(text);
     }

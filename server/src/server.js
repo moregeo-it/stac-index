@@ -27,7 +27,7 @@ class Server extends Config {
 		this.https_server = null;
 
 		this.afterServerStartListener = [];
-		this.data = new Data(this.db, this.twitter);
+		this.data = new Data(this.db);
 
 		this.startServer();
 	}
@@ -153,27 +153,17 @@ class Server extends Config {
 		server.get('/tutorials', this.tutorials.bind(this));
 		server.get('/catalogs', this.catalogs.bind(this));
 		server.get('/catalogs/:slug', this.catalogById.bind(this));
-		server.get('/collections', this.collections.bind(this));
-		server.get('/collections/:id', this.collectionById.bind(this));
 		server.get('/newest', this.newest.bind(this));
-		server.get('/statistics', this.statistics.bind(this));
 		server.get('/proxy', this.proxy.bind(this));
 		server.get('/sitemap.xml', this.sitemap.bind(this));
 	}
 
 	root(req, res, next) {
 		res.send(200, {
-			stac_version: "0.9.0",
+			stac_version: "1.1.0",
 			id: "stac-index",
 			description: "Root catalog of STAC Index.",
-			links: [
-				{
-					rel: "data",
-					href: this.serverUrl + "/collections",
-					type: "application/json",
-					title: "Collections"
-				}
-			]
+			links: []
 		});
 		return next();
 	}
@@ -196,7 +186,7 @@ class Server extends Config {
 				}
 			case 'ecosystem':
 				try {
-					let eco = await this.data.addEcosystem(req.body.url, req.body.title, req.body.summary, req.body.categories, req.body.language, req.body.email, req.body.extensions, req.body.apiExtensions);
+					let eco = await this.data.addEcosystem(req.body.url, req.body.title, req.body.summary, req.body.categories, req.body.language, req.body.email);
 					res.send(200, eco);
 					return;
 				} catch (e) {
@@ -226,11 +216,6 @@ class Server extends Config {
 			data,
 			tutorials
 		});
-		return;
-	}
-
-	async statistics(req, res) {
-		res.send(await this.data.getStatistics());
 		return;
 	}
 
@@ -271,17 +256,6 @@ class Server extends Config {
 		return;
 	}
 
-	async collections(req, res) {
-		res.send(await this.data.getCollections());
-		return;
-	}
-
-	async collectionById(req, res) {
-		var id = req.params['id'];
-		res.send(await this.data.getCollection(id));
-		return;
-	}
-
 	languages(req, res, next) {
 		res.send(this.data.getLanguages());
 		return next();
@@ -295,15 +269,12 @@ class Server extends Config {
 			['/privacy', 0, 'monthly'],
 			['/add', 0, 'monthly'],
 			['/catalogs', 0.5, 'daily'],
-			['/collections', 0.5, 'daily'],
 			['/ecosystem', 0.5, 'daily'],
 			['/tutorials', 0.5, 'daily']
 		];
 
 		let catalogs = await this.data.getCatalogs();
 		catalogs.forEach(c => urls.push([`/catalogs/${c.slug}`, 0.8, 'weekly']));
-		let collections = await this.data.getCollections();
-		collections.forEach(c => urls.push([`/collections/${c.slug}/${c.id}`, 1.0, 'weekly']));
 
 		let xml = urls
 			.map(r => `\t<url><loc>${baseUrl}${r[0]}</loc><priority>${r[1]}</priority><changefreq>${r[2]}</changefreq></url>`)

@@ -6,23 +6,19 @@
         Welcome to the STAC Index!
       </template>
       <template v-slot:lead>
-        Here you can find STAC Catalogs, Collections, APIs, Software and Tools.<br />
+        Here you can find STAC Catalogs, APIs, Software and Tools.<br />
         You can also add your own data and tools to the list.
       </template>
       <hr class="my-4">
       <p>You don't know STAC yet? Check it out at <a href="https://stacspec.org" target="_blank">stacspec.org</a>.</p>
 
       <b-button to="/catalogs">Catalogs</b-button>
-      <!-- <b-button to="/collections">Collection Search</b-button> -->
       <b-button to="/ecosystem">Ecosystem</b-button>
       <b-button to="/learn">Learning Resources</b-button>
     </b-jumbotron>
 
     <div class="recently" v-if="newest.data.length > 0 || newest.ecosystem.length > 0">
-      <h2>
-        Recently added
-        <small class="text-muted"><b-icon icon="twitter" /> Follow <a href="https://twitter.com/stacindex">@stacindex</a> to get notified about additions</small>
-      </h2>
+      <h2>Recently added</h2>
       <b-card-group columns>
         <b-card header="Catalogs" v-if="newest.data.length > 0">
           <b-list-group flush>

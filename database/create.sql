@@ -81,8 +81,6 @@ CREATE TABLE public.ecosystem (
     summary text NOT NULL,
     categories character varying(50)[] NOT NULL,
     email character varying(255),
-    extensions character varying(50)[] NOT NULL,
-    api_extensions character varying(50)[] NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
     language character varying(50)

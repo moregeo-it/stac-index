@@ -1,17 +1,15 @@
 const { Pool } = require('pg');
 const axios = require('axios');
-const twitter = require('twitter-lite');
 const Utils = require('lodash');
-const { EXTENSIONS, API_EXTENSIONS, CATEGORIES, DEV, LINK_REGEXP } = require('../../commons');
+const { CATEGORIES, DEV, LINK_REGEXP } = require('../../commons');
 
 const emailRegExp = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
 const validAccess = ['public', 'protected', 'private'];
 
 module.exports = class Data {
 
-	constructor(db, twitter = {}) {
+	constructor(db) {
 		this.db = new Pool(db);
-		this.twitter = twitter;
 		this.loadLanguages();
 		this.initSpokenLanguages();
 	}
@@ -63,11 +61,6 @@ module.exports = class Data {
 		return this.upgradeTutorials(await this.getNewest("tutorials", recent));
 	}
 
-
-	async getCollections() {
-		return []; // ToDo
-	}
-
 	async getCatalogs() {
 		return this.upgradeCatalogs(await this.getAllSorted("catalogs"));
 	}
@@ -96,10 +89,6 @@ module.exports = class Data {
 		return [];
 	}
 
-	async getCollection(id) {
-		return null; // ToDo
-	}
-
 	async getCatalog(slug) {
 		const catalog = await this.findOne("catalogs", "slug", slug);
 		if (catalog) {
@@ -108,40 +97,6 @@ module.exports = class Data {
 		else {
 			return null;
 		}
-	}
-
-	async getStatistics() {
-		let queueCount = await this.getCount('queue');
-		return {
-			queue: {
-				count: queueCount,
-				pending: queueCount - await this.getPendingCount(),
-				errors: await this.getErrorCount(),
-			},
-			rootCatalogs: {
-				count: await this.getCount('catalogs')
-			},
-			collections: {
-				count: await this.getCount('collections'),
-				countPerRootCatalog: await this.getCountPerRootCatalog('collections'),
-				extensionCountsByRootCatalogUsage: await this.getExtensionCountsByRootCatalogUsage('collection')
-			},
-			items: {
-				comment: 'Only ONE item per CATALOG is indexed at the moment, so this actually is more a catalog count than a item count!',
-				count: await this.getCount('items'),
-				countPerRootCatalog: await this.getCountPerRootCatalog('items'),
-				extensionCountsByRootCatalogUsage: await this.getExtensionCountsByRootCatalogUsage('item')
-			},
-			keywords: {
-				count: await this.getCount('keywords')
-			},
-			stac_versions: {
-				list: await this.getAll('stac_versions', 'version')
-			},
-			stac_extensions: {
-				list: await this.getAll('stac_extensions', 'extension')
-			}
-		};
 	}
 
 	async getCountPerRootCatalog(table) {
@@ -163,30 +118,6 @@ module.exports = class Data {
 		} catch(error) {
 			console.error(error);
 		}
-	}
-
-	async getExtensionCountsByRootCatalogUsage(type) {
-		try {
-			let sql = `
-			SELECT ext.extension, COUNT(DISTINCT cat.id) AS num
-			FROM ${type}_extensions AS map
-				LEFT JOIN ${type}s AS res ON map.${type} = res.id
-				LEFT JOIN catalogs AS cat ON cat.id = res.catalog
-				LEFT JOIN stac_extensions AS ext ON ext.id = map.extension
-			GROUP BY ext.extension
-			ORDER BY num DESC;
-			`;
-			const res = await this.db.query(sql);
-			if (res.rows.length > 0) {
-				return res.rows.map(v => {
-					v.num = parseInt(v.num, 10);
-					return v;
-				});
-			}
-		} catch(error) {
-			console.error(error);
-		}
-		return [];
 	}
 
 	async getAll(table, column = '*', orderBy = null, asc = true) {
@@ -286,21 +217,18 @@ module.exports = class Data {
 		}
 	}
 	
-	async addEcosystem(url, title, summary, categories = [], language = null, email = null, extensions = [], apiExtensions = []) {
+	async addEcosystem(url, title, summary, categories = [], language = null, email = null) {
 		url = await this.checkUrl(url);
 		title = this.checkTitle(title);
 		summary = this.checkSummary(summary);
 		categories = this.checkCategories(categories);
 		language = this.checkLanguage(language);
 		email = this.checkEmail(email);
-		extensions = this.checkExtensions(extensions);
-		apiExtensions = this.checkApiExtensions(apiExtensions);
 		await this.checkDuplicates("ecosystem", url, title);
 
-		var data = {url, title, summary, categories, language, email, extensions, api_extensions: apiExtensions};
+		var data = {url, title, summary, categories, language, email};
 		const ecosystem = await this.insertFromObject(data, "ecosystem");
 		if (ecosystem) {
-			this.tweet("ecosystem", data);
 			return this.upgradeEcosystem(ecosystem);
 		}
 		else {
@@ -320,7 +248,6 @@ module.exports = class Data {
 		var data = {url, title, summary, tags, language, email};
 		const tutorial = await this.insertFromObject(data, "tutorials");
 		if (tutorial) {
-			this.tweet("tutorial", data);
 			return this.upgradeTutorial(tutorial);
 		}
 		else {
@@ -348,7 +275,6 @@ module.exports = class Data {
 		var data = {slug, url, title, summary, access, access_info: accessInfo, email, is_api: isApi};
 		const catalog = await this.insertFromObject(data, "catalogs");
 		if (catalog) {
-			this.tweet("catalogs", data);
 			return this.upgradeCatalog(catalog);
 		}
 		else {
@@ -526,31 +452,7 @@ module.exports = class Data {
 		return email;
 	}
 
-	checkExtensions(ext) {
-		return this._checkExtensions(ext, false);
-	}
-
-	checkApiExtensions(ext) {
-		return this._checkExtensions(ext, true);
-	}
-
-	_checkExtensions(extensions, api = false) {
-		if(!Array.isArray(extensions)) {
-			return [];
-		}
-		const allExtensions = Object.keys(api ? API_EXTENSIONS : EXTENSIONS);
-		let invalidExtension = extensions.find(e => !allExtensions.includes(e));
-		if (invalidExtension) {
-			const label = api ? "API Extension" : "Extension";
-			throw new Error(`${label} '${invalidExtension}' is invalid`);
-		}
-		return extensions;
-	}
-
 	upgradeEcosystem(tool) {
-		// api_extensions => apiExtensions
-		tool.apiExtensions = tool.api_extensions;
-		delete tool.api_extensions;
 		// Remove email
 		delete tool.email;
 		return tool;
@@ -586,62 +488,6 @@ module.exports = class Data {
 	
 	upgradeCatalogs(catalogs) {
 		return catalogs.map(this.upgradeCatalog);
-	}
-
-	async tweet(type, data) {
-		if (!this.twitter.consumer_key || !this.twitter.consumer_secret || !this.twitter.access_token_key || !this.twitter.access_token_secret) {
-			return;
-		}
-	
-		try {			
-			var label;
-			var url = data.url;
-			switch(type) {
-				case 'catalogs':
-					if (data.access === 'private') {
-						return; // Don't tweet private access data
-					}
-					label = data.is_api ? 'STAC API' : 'static STAC Catalog';
-					url = `https://stacindex.org/catalogs/${data.slug}`;
-					break;
-				case 'ecosystem':
-					label = `${data.language} STAC software/tool`;
-					break;
-				case 'tutorial':
-					label = `STAC learning resource`;
-					break;
-				default:
-					return;
-			}
-
-			let status = `New ${label} "${data.title}" available at ${url}\n\n`;
-
-			// Remove link from summary
-			let matches = data.summary.match(LINK_REGEXP);
-			let summary = matches ? matches[1] + matches[2] + matches[4] : data.summary;
-			let charsLeft = 280 - status.length - 10; // 10 chars buffer
-			if (charsLeft > 50) {
-				if (summary.length > charsLeft) {
-					status += summary.substr(0, charsLeft) + '…';
-				}
-				else {
-					status += summary;
-				}
-			}
-			status = status.trim();
-
-			if (DEV) {
-				console.log(status);
-				return;
-			}
-
-			const client = new twitter(this.twitter);
-			await client.post('statuses/update', {status});
-		} catch (error) {
-			if (DEV) {
-				console.error(error);
-			}
-		}
 	}
 
 }

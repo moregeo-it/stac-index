@@ -20,22 +20,7 @@ const routes = [
     path: '/catalogs/:id',
     name: 'BrowseCatalog',
     component: () => import(/* webpackChunkName: "browse" */ '../views/Browse.vue'),
-    props: route => ({ id: route.params.id, collection: false })
-  },
-  {
-    path: '/collections',
-    name: 'Collections',
-    component: () => import(/* webpackChunkName: "collections" */ '../views/Collections.vue')
-  },
-  {
-    path: '/collections/:id',
-    redirect: { name: 'BrowseCatalog' }
-  },
-  {
-    path: '/collections/:slug/:id',
-    name: 'BrowseCollection',
-    component: () => import(/* webpackChunkName: "browse" */ '../views/Browse.vue'),
-    props: route => ({ id: route.params.id, collection: true })
+    props: route => ({ id: route.params.id })
   },
   {
     path: '/ecosystem',
