@@ -1,6 +1,6 @@
 <template>
   <b-container class="content tutorials">
-    <h1>Learn STAC</h1>
+    <h1>Learning Resources</h1>
     <p>A list of tutorials and workshops about STAC and its ecosystem.</p>
     <b-spinner v-if="tutorials === null" label="Loading..."></b-spinner>
     <b-alert v-else-if="typeof tutorials === 'string'" variant="danger" show>{{ tutorials }}</b-alert>

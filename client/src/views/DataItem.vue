@@ -14,17 +14,23 @@
     <div class="styled-description summary">
       <p v-html="parseLink(data.summary)"></p>
     </div>
-    <small class="url"><b-icon icon="link" /> <code><b-link :href="data.url" target="_blank">{{ data.url }}</b-link></code></small>
+    <small class="url">
+      <b-icon icon="link" />
+      <code class="ml-1"><b-link :href="data.url" target="_blank">{{ data.url }}</b-link></code>
+      <CopyButton class="ml-2" :copyText="data.url" />
+    </small>
   </b-list-group-item>
 </template>
 
 <script>
 import { Description } from '@openeo/vue-components';
+import CopyButton from "./DataActionButtons.vue";
 import Utils from '../utils';
 
 export default {
   name: 'DataItem',
   components: {
+    CopyButton,
     Description
   },
   props: {
@@ -35,6 +41,9 @@ export default {
   methods: {
     parseLink(text) {
       return Utils.parseLink(text);
+    },
+    copy() {
+
     }
   }
 };
@@ -47,7 +56,6 @@ export default {
 small.url {
   display: block;
   line-height: 1.25em;
-  margin: 0.25em 0;
 }
 small.url code {
   font-size: 100%;

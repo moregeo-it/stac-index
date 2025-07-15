@@ -1,7 +1,7 @@
 <template>
   <b-container class="content catalogs">
-    <h1>Catalogs</h1>
-    <p>A list of STAC APIs and Static Catalogs.</p>
+    <h1>Data</h1>
+    <p>A list of STAC APIs and static STAC catalogs.</p>
     <b-spinner v-if="data === null" label="Loading..."></b-spinner>
     <b-alert v-else-if="typeof data === 'string'" variant="danger" show>{{ data }}</b-alert>
     <template v-else>
@@ -18,7 +18,7 @@
         <b-nav-item :active="access === 'protected'" :to="uri({access: 'protected'})">Public &amp; Protected only</b-nav-item>
       </b-nav>
       <hr />
-      <b-alert v-if="filtered.length === 0" show>No catalogs found.</b-alert>
+      <b-alert v-if="filtered.length === 0" show>No data found.</b-alert>
       <b-list-group v-else>
         <DataItem v-for="item in filtered" :key="item._id" :data="item" />
       </b-list-group>

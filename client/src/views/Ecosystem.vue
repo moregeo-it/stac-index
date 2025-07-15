@@ -1,6 +1,6 @@
 <template>
   <b-container class="content ecosystem">
-    <h1>Ecosystem</h1>
+    <h1>Software</h1>
     <p>A list of software and tools for STAC.</p>
     <b-spinner v-if="ecosystem === null" label="Loading..."></b-spinner>
     <b-alert v-else-if="typeof ecosystem === 'string'" variant="danger" show>{{ ecosystem }}</b-alert>

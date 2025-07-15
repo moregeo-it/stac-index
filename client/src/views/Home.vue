@@ -10,7 +10,7 @@
         You can also add your own data and tools to the list.
       </template>
       <hr class="my-4">
-      <p>You don't know STAC yet? Check it out at <a href="https://stacspec.org" target="_blank">stacspec.org</a>.</p>
+      <p>You don't know what STAC is? Check it out at <a href="https://stacspec.org" target="_blank">stacspec.org</a>.</p>
 
       <b-button to="/catalogs">Catalogs</b-button>
       <b-button to="/ecosystem">Ecosystem</b-button>
@@ -18,15 +18,15 @@
     </b-jumbotron>
 
     <div class="recently" v-if="newest.data.length > 0 || newest.ecosystem.length > 0">
-      <h2>Recently added</h2>
+      <h2>Recently Added</h2>
       <b-card-group columns>
-        <b-card header="Catalogs" v-if="newest.data.length > 0">
+        <b-card header="Data" v-if="newest.data.length > 0">
           <b-list-group flush>
             <DataItem v-for="data in newest.data" :key="data._id" :data="data" />
           </b-list-group>
         </b-card>
 
-        <b-card header="Ecosystem" v-if="newest.ecosystem.length > 0">
+        <b-card header="Software" v-if="newest.ecosystem.length > 0">
           <b-list-group flush>
             <EcosystemItem v-for="data in newest.ecosystem" :key="data._id" :data="data" />
           </b-list-group>

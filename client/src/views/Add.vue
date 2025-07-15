@@ -100,10 +100,10 @@ export default {
   data() {
     return {
       typeList: [
-          { text: 'Static Catalog', value: 'catalog' },
-          { text: 'API', value: 'api' },
-          { text: 'Tool / Software', value: 'ecosystem' },
-          { text: 'Learning resource', value: 'tutorial' }
+          { text: 'Data: Static Catalog', value: 'catalog' },
+          { text: 'Data: API', value: 'api' },
+          { text: 'Software', value: 'ecosystem' },
+          { text: 'Learning Resource', value: 'tutorial' }
       ],
       languageList: [],
       spokenLanguageList: [],

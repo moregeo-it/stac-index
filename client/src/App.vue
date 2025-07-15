@@ -11,9 +11,9 @@
 
         <b-collapse id="nav-collapse" is-nav>
           <b-navbar-nav>
-            <b-nav-item to="/catalogs" title="STAC APIs and catalogs"><b-icon icon="folder-fill" /> Catalogs</b-nav-item>
-            <b-nav-item to="/ecosystem" title="STAC tools, libraries and other software"><b-icon icon="tools" /> Ecosystem</b-nav-item>
-            <b-nav-item to="/learn" title="STAC tutorials and more learning resources"><b-icon icon="info-circle-fill" /> Learn STAC</b-nav-item>
+            <b-nav-item to="/catalogs" title="STAC APIs and catalogs"><b-icon icon="folder-fill" /> Data</b-nav-item>
+            <b-nav-item to="/ecosystem" title="STAC tools, libraries and other software"><b-icon icon="tools" /> Software</b-nav-item>
+            <b-nav-item to="/learn" title="STAC tutorials and more learning resources"><b-icon icon="info-circle-fill" /> Learning Resources</b-nav-item>
             <b-nav-item to="/add" title="Add a new STAC resource" class="submit"><b-icon icon="plus-circle-fill" /> Submit</b-nav-item>
           </b-navbar-nav>
 
@@ -52,10 +52,10 @@
   color: #144E63;
 }
 
-#stac-index a, #stac-index .list-group-item .styled-description a, #stac-index a.list-group-item h5 {
+#stac-index a:not(.btn), #stac-index .list-group-item .styled-description a, #stac-index a.list-group-item h5 {
   color: #09B3AD;
 }
-#stac-index a:hover, #stac-index .list-group-item .styled-description a:hover, #stac-index a:hover.list-group-item h5 {
+#stac-index a:not(.btn):hover, #stac-index .list-group-item .styled-description a:hover, #stac-index a:hover.list-group-item h5 {
   color: #144E63;
 }
 #stac-index .stac-nav a {

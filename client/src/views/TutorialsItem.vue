@@ -9,7 +9,7 @@
       <p v-html="parseLink(data.summary)"></p>
     </div>
     <small>
-      <b-badge v-for="tag in tags" :key="tag">{{ tag }}</b-badge>
+      <b-badge class="tag" v-for="tag in tags" :key="tag">{{ tag }}</b-badge>
     </small>
   </b-list-group-item>
 </template>
@@ -26,7 +26,23 @@ export default {
   },
   computed: {
     tags() {
-      return this.data.tags.map(tag => tag.toUpperCase()).sort();
+      return this.data.tags
+        .map(tag => {
+          return tag
+            .split(/\s/)
+            .map(part => part.trim())
+            .map(part => {
+              if (part.length <= 3) {
+                part = part.toUpperCase();
+              }
+              else {
+                part = part.charAt(0).toUpperCase() + part.slice(1)
+              }
+              return part.replaceAll(/stac(?![a-z])/ig, 'STAC');
+            })
+            .join(' ');
+        })
+        .sort();
     }
   },
   methods: {
