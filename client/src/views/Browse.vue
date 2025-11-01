@@ -1,6 +1,6 @@
 <template>
   <b-container fluid class="browse content">
-    <b-spinner v-if="data === null" label="Loading..."></b-spinner>
+    <b-spinner v-if="data === null" label="Loading..." />
     <b-alert v-else-if="typeof data === 'string'" variant="danger" show>{{ data }}</b-alert>
     <b-container v-else>
       <b-alert v-if="data.access !== 'public'" variant="info" show>
@@ -27,23 +27,24 @@
           </template>
           STAC Index tries to proxy the request, but links, images or other references might be broken while browsing through the {{ type }}.
           The URLs shown below will include the STAC Index proxy (<code>{{ proxyUrl }}</code>) and should not be used as provided in the browser.
-          Use the offical link to the {{ type }} instead:<br /><a :href="data.url" target="_blank"><code>{{ data.url }}</code></a>
+          Use the offical link to the {{ type }} instead:<br><a :href="data.url" target="_blank"><code>{{ data.url }}</code></a>
         </b-alert>
         <b-alert v-if="isOutdated" variant="info" dismissible show>
           This STAC catalog or API does use a legacy version of STAC. Stable versions of STAC are 1.0.0 or later.
           Please inform the data provider about the new STAC version and kindly ask them to update the catalog to STAC 1.0 for better interoperability and tooling support.
         </b-alert>
-        <div v-if="data.access !== 'private'" id="app"></div>
+        <div v-if="data.access !== 'private'" id="app" />
       </template>
     </b-container>
   </b-container>
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import isPlainObject from 'lodash/isPlainObject';
-import { Description } from '@openeo/vue-components';
+import Description from './Description.vue';
 
-export default {
+export default defineComponent({
   name: 'Browse',
   components: {
     Description
@@ -53,7 +54,8 @@ export default {
       type: String,
       validator: function (value) {
         return Boolean(value.match(/^[a-z0-9-]+$/i));
-      }
+      },
+      required: true
     }
   },
   data() {
@@ -79,7 +81,7 @@ export default {
   },
   async mounted() {
     try {
-      let endpoint = '/catalogs/' + this.id
+      let endpoint = '/catalogs/' + this.id;
       let response = await this.$axios.get(endpoint);
       if (!isPlainObject(response.data)) {
         this.data = "Information retrieved from the server are invalid.";
@@ -88,7 +90,8 @@ export default {
       else {
         this.data = response.data;
         if (this.data.access !== 'private') {
-          let createBrowser = require('stac-browser/src/main').default;
+          let createBrowser = require('stac-browser/src/app').default;
+          let browserConfig = require('stac-browser/src/config').default;
           let url = this.data.url;
           if (url.startsWith('http://')) {
             url = this.makeProxyUrl(url);
@@ -108,7 +111,18 @@ export default {
               this.corsWarning = true;
             }
           }
-          await createBrowser(url, this.$router.path);
+          Object.assign(browserConfig, {
+            catalogUrl: url,
+            pathPrefix: this.$router.path,
+            historyMode: 'hash',
+            supportedLocales: ['en'],
+            storeLocale: false,
+            detectLocaleFromBrowser: false,
+            catalogTitle: this.data.title,
+            socialSharing: [],
+          });
+          const app = await createBrowser(browserConfig);
+          app.mount('#app');
         }
         else {
           document.title = this.data.title + " - STAC Index";
@@ -124,7 +138,7 @@ export default {
       return this.proxyUrl + encodeURIComponent(url);
     }
   }
-}
+});
 </script>
 
 <style scoped>

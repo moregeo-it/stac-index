@@ -4,18 +4,18 @@
     <b-alert v-if="typeof error === 'string'" variant="danger" show>{{ error }}</b-alert>
     <b-alert v-else-if="typeof confirmation === 'string'" :variant="urlHintType" show>{{ confirmation }}</b-alert>
     <b-alert v-else variant="warning" show>
-      The data entered here will be stored in the STAC Index and made publicly available immediately after submission without further review.<br />
+      The data entered here will be stored in the STAC Index and made publicly available immediately after submission without further review.<br>
       Please make sure that the data you provide is correct and meaningful.
     </b-alert>
     <b-form @submit="onSubmit">
       <h5>What do you want to add?</h5>
       <b-form-group>
-        <b-form-radio-group v-model="type" id="type" name="type" :options="typeList"></b-form-radio-group>
+        <b-form-radio-group v-model="type" id="type" name="type" :options="typeList" />
       </b-form-group>
       <template v-if="type">
-        <h5>{{ formTitle }}</h5>
+        <h5 class="mt-3">{{ formTitle }}</h5>
         <b-form-group v-if="fields.includes('url')" label="URL:" label-for="url">
-          <b-form-input id="url" type="url" v-model="url" required></b-form-input>
+          <b-form-input id="url" type="url" v-model="url" required />
           <b-form-text v-if="type !== 'ecosystem' && type !== 'tutorial'">
             HTTPS should be used instead of HTTP whenever available.
             This URL must be publicly accessible or you must select "private" below.
@@ -24,15 +24,19 @@
           <b-alert v-if="urlHint" :variant="urlHintType" show>{{ urlHint }}</b-alert>
         </b-form-group>
         <b-form-group v-if="fields.includes('title')" :label="type === 'ecosystem' ? 'Name of the software or tool:' : 'Title:'" label-for="title">
-          <b-form-input id="title" type="text" v-model="title" required minlength="3" :maxlength="maxTitleLength"></b-form-input>
+          <b-form-input id="title" type="text" v-model="title" required minlength="3" :maxlength="maxTitleLength" />
           <b-form-text>Min. 3 chars, max. {{ maxTitleLength }} chars.</b-form-text>
         </b-form-group>
         <b-form-group v-if="fields.includes('slug')" label="Slug" label-for="title">
-          <b-form-input id="slug" type="text" v-model="slug" required minlength="3" maxlength="50" @keydown="stopSlugGen" @mousedown="stopSlugGen"></b-form-input>
+          <b-form-input
+            id="slug" type="text" v-model="slug" required
+            minlength="3" maxlength="50"
+            @keydown="stopSlugGen" @mousedown="stopSlugGen"
+          />
           <b-form-text>Short identifier for the URL. Min. 3 chars, max. 50 chars. Allowed chars: <code>a-z</code>, <code>0-9</code>, <code>-</code></b-form-text>
         </b-form-group>
         <b-form-group v-if="fields.includes('summary')" label="Summary:" label-for="summary">
-          <b-form-textarea id="summary" v-model="summary" rows="3" required minlength="50" maxlength="300"></b-form-textarea>
+          <b-form-textarea id="summary" v-model="summary" rows="3" required minlength="50" maxlength="300" />
           <b-form-text>
             Short summary about the {{ formTitle }}. Min. 50 chars, max. 300 chars, currently {{ summary ? summary.length : 0 }} chars.
             <template v-if="type !== 'tutorial'">
@@ -41,24 +45,24 @@
           </b-form-text>
         </b-form-group>
         <b-form-group v-if="fields.includes('categories')" label="Categories:" label-for="categories">
-          <multiselect v-model="categories" :options="categoryList" :multiple="true" :taggable="true"></multiselect>
+          <vue-multiselect v-model="categories" :options="categoryList" :multiple="true" :taggable="true" />
         </b-form-group>
         <b-form-group v-if="fields.includes('tags')" label="Tags:" label-for="tags">
-          <multiselect v-model="tags" :options="allTags" :multiple="true" :taggable="true" @tag="addTag"></multiselect>
+          <vue-multiselect v-model="tags" :options="allTags" :multiple="true" :taggable="true" @tag="addTag" />
           <b-form-text>At least one tag to categorize the learning resource. Either select existing tags or create new ones. Each tag requires min. 2 chars and max. 50 chars. Tags will be converted to lower-case.</b-form-text>
         </b-form-group>
         <template v-if="fields.includes('language')">
-        <b-form-group v-if="type == 'tutorial'" label="Language:" label-for="language">
-          <multiselect v-model="language" :options="spokenLanguageList" trackBy="code" label="name"></multiselect>
-          <b-form-text>This should be the written/spoken language of the learning resource.</b-form-text>
-        </b-form-group>
-        <b-form-group v-else label="Programming Language:" label-for="language">
-          <multiselect v-model="language" :options="languageList"></multiselect>
-          <b-form-text>This should be the main programming language.</b-form-text>
-        </b-form-group>
+          <b-form-group v-if="type == 'tutorial'" label="Language:" label-for="language">
+            <vue-multiselect v-model="language" :options="spokenLanguageList" trackBy="code" label="name" />
+            <b-form-text>This should be the written/spoken language of the learning resource.</b-form-text>
+          </b-form-group>
+          <b-form-group v-else label="Programming Language:" label-for="language">
+            <vue-multiselect v-model="language" :options="languageList" />
+            <b-form-text>This should be the main programming language.</b-form-text>
+          </b-form-group>
         </template>
         <b-form-group v-if="fields.includes('email')" label="Contact e-mail:" label-for="email">
-          <b-form-input id="email" type="email" v-model="email"></b-form-input>
+          <b-form-input id="email" type="email" v-model="email" />
           <b-form-text>Optional. Not publicly displayed. Just used to contact you in case we have questions regarding your submission.</b-form-text>
         </b-form-group>
         <b-form-group v-if="fields.includes('access')" label="Access:" label-for="access">
@@ -75,27 +79,29 @@
             <b-form-text>No public access, i.e. at least one collection or item must be publicly accessible.</b-form-text>
           </b-form-radio>
           <template v-if="access !== 'public'">
-            <b-form-text text-variant="black"><br />Please give information how interested parties can gain access to the {{ formTitle }} below:</b-form-text>
-            <b-form-textarea id="accessInfo" v-model="accessInfo" rows="3" required minlength="100" maxlength="1000"></b-form-textarea>
+            <b-form-text text-variant="black"><br>Please give information how interested parties can gain access to the {{ formTitle }} below:</b-form-text>
+            <b-form-textarea id="accessInfo" v-model="accessInfo" rows="3" required minlength="100" maxlength="1000" />
             <b-form-text>CommonMark (Markdown) is supported. Min. 100 chars, max. 1000 chars.</b-form-text>
           </template>
         </b-form-group>
-        <b-button type="submit" variant="primary">Submit</b-button>
+        <b-button type="submit" variant="primary" class="mt-3">Submit</b-button>
       </template>
     </b-form>
   </b-container>
 </template>
 
 <script>
-import Multiselect from 'vue-multiselect';
+import { defineComponent } from 'vue';
+import VueMultiselect from 'vue-multiselect';
+import 'vue-multiselect/dist/vue-multiselect.css';
 import slugify from 'slugify';
 import isPlainObject from 'lodash/isPlainObject';
 import { CATEGORIES } from '../../../commons';
 
-export default {
+export default defineComponent({
   name: 'Add',
   components: {
-    Multiselect
+    VueMultiselect
   },
   data() {
     return {
@@ -126,6 +132,39 @@ export default {
       urlHint: "",
       urlHintType: "info"
     };
+  },
+  computed: {
+    proxyUrl() {
+      return this.$axios.defaults.baseURL + '/proxy?';
+    },
+    formTitle() {
+      let type = this.typeList.find(t => t.value === this.type);
+      if (type) {
+        return type.text;
+      }
+      else {
+        return null;
+      }
+    },
+    maxTitleLength() {
+      return this.type === 'tutorial' ? 200 : 50;
+    },
+    fields() {
+      let fields = ['url', 'title', 'summary', 'email'];
+      if (this.type === 'catalog' || this.type === 'api') {
+        fields.push('slug');
+        fields.push('access');
+      }
+      else if (this.type === 'ecosystem') {
+        fields.push('language');
+        fields.push('categories');
+      }
+      else if (this.type === 'tutorial') {
+        fields.push('language');
+        fields.push('tags');
+      }
+      return fields;
+    }
   },
   watch: {
     async url(newUrl) {
@@ -197,39 +236,6 @@ export default {
           strict: true
         });
       }
-    }
-  },
-  computed: {
-    proxyUrl() {
-      return this.$axios.defaults.baseURL + '/proxy?';
-    },
-    formTitle() {
-      let type = this.typeList.find(t => t.value === this.type);
-      if (type) {
-        return type.text;
-      }
-      else {
-        return null;
-      }
-    },
-    maxTitleLength() {
-      return this.type === 'tutorial' ? 200 : 50;
-    },
-    fields() {
-      let fields = ['url', 'title', 'summary', 'email'];
-      if (this.type === 'catalog' || this.type === 'api') {
-        fields.push('slug');
-        fields.push('access');
-      }
-      else if (this.type === 'ecosystem') {
-        fields.push('language');
-        fields.push('categories');
-      }
-      else if (this.type === 'tutorial') {
-        fields.push('language');
-        fields.push('tags');
-      }
-      return fields;
     }
   },
   async created() {
@@ -325,7 +331,5 @@ export default {
       };
     }
   }
-}
+});
 </script>
-
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

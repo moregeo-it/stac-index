@@ -6,7 +6,7 @@
       <!-- ToDo: Display full language name -->
     </div>
     <div class="styled-description summary">
-      <p v-html="parseLink(data.summary)"></p>
+      <p v-html="parseLink(data.summary)" />
     </div>
     <small>
       <b-badge class="tag" v-for="tag in tags" :key="tag">{{ tag }}</b-badge>
@@ -15,13 +15,15 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import Utils from '../utils';
 
-export default {
+export default defineComponent({
   name: 'EcosystemItem',
   props: {
     data: {
-      type: Object
+      type: Object,
+      required: true
     }
   },
   computed: {
@@ -36,7 +38,7 @@ export default {
                 part = part.toUpperCase();
               }
               else {
-                part = part.charAt(0).toUpperCase() + part.slice(1)
+                part = part.charAt(0).toUpperCase() + part.slice(1);
               }
               return part.replaceAll(/stac(?![a-z])/ig, 'STAC');
             })
@@ -50,5 +52,6 @@ export default {
       return Utils.parseLink(text);
     }
   }
-};
+});
 </script>
+
