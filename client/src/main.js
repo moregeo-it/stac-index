@@ -1,25 +1,20 @@
-import Vue from 'vue'
+import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import axios from 'axios';
-import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
-import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
+import { createBootstrap } from 'bootstrap-vue-next';
 import { HTTPS, HTTP_HOST, HTTP_PORT, HTTP_PATH } from '../../commons';
 
 const URL = (HTTPS ? 'https://' : 'http://') + HTTP_HOST + (!HTTPS && HTTP_PORT != 80 ? ':' + HTTP_PORT : '') + HTTP_PATH;
 
-Vue.config.productionTip = false;
+const app = createApp(App);
 
-Vue.prototype.$axios = axios.create({
+app.config.globalProperties.$axios = axios.create({
   baseURL: URL,
   timeout: 10000,
 });
 
-Vue.use(BootstrapVue);
-Vue.use(IconsPlugin);
+app.use(createBootstrap());
+app.use(router);
 
-new Vue({
-  router,
-  render: h => h(App)
-}).$mount('#stac-index');
+app.mount('body');

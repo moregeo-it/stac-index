@@ -5,7 +5,7 @@
       <small><b-badge v-if="data.language">{{ data.language }}</b-badge></small>
     </div>
     <div class="styled-description summary">
-      <p v-html="parseLink(data.summary)"></p>
+      <p v-html="parseLink(data.summary)" />
     </div>
     <small>
       Categories:
@@ -15,18 +15,20 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import Utils from '../utils';
 
-export default {
+export default defineComponent({
   name: 'EcosystemItem',
   props: {
     data: {
-      type: Object
+      type: Object,
+      required: true
     }
   },
   computed: {
     categories() {
-      return this.data.categories.sort();
+      return this.data.categories.slice(0).sort();
     }
   },
   methods: {
@@ -34,5 +36,5 @@ export default {
       return Utils.parseLink(text);
     }
   }
-};
+});
 </script>
