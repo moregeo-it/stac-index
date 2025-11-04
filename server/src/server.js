@@ -1,4 +1,5 @@
-const restify = require('restify');
+const express = require('express');
+const cors = require('cors');
 const fse = require('fs-extra');
 const Utils = require('lodash');
 const Data = require('./data');
@@ -48,7 +49,7 @@ class Server extends Config {
 	}
 
 	async initHttpServer() {
-		this.http_server = restify.createServer(this.serverOptions);
+		this.http_server = express();
 		this.initServer(this.http_server);
 		return new Promise((resolve) => {
 			this.http_server.listen(this.port, () => {
@@ -61,12 +62,14 @@ class Server extends Config {
 
 	async initHttpsServer() {
 		if (this.isHttpsEnabled()) {
-			var https_options = Object.assign({}, this.serverOptions, {
-				key: fse.readFileSync(this.serverContext.ssl.key),
-				certificate: fse.readFileSync(this.serverContext.ssl.certificate)
-			});
-			this.https_server = restify.createServer(https_options);
-			this.initServer(this.https_server);
+			var https_options = {
+				key: fse.readFileSync(this.ssl.key),
+				cert: fse.readFileSync(this.ssl.certificate)
+			};
+			const https = require('https');
+			const httpsApp = express();
+			this.initServer(httpsApp);
+			this.https_server = https.createServer(https_options, httpsApp);
 			return new Promise((resolve) => {
 				if (this.isHttpsEnabled()) {
 					this.https_server.listen(this.ssl.port, () => {
@@ -86,16 +89,19 @@ class Server extends Config {
 		}
 	}
 
-	errorHandler(req, res, e, next) {
+	errorHandler(req, res, err, next) {
 		if (this.debug) {
-			if (e.originalError) {
-				console.error(e.originalError);
+			if (err.originalError) {
+				console.error(err.originalError);
 			}
 			else {
-				console.error(e);
+				console.error(err);
 			}
 		}
-		return next();
+		if (!res.headersSent) {
+			res.status(500).json({ error: 'Internal Server Error' });
+		}
+		return next(err);
 	}
 
 	async startServer() {
@@ -111,38 +117,20 @@ class Server extends Config {
 
 	}
 
-	injectCorsHeader(req, res, next) {
-		if (!req.headers['origin']) {
-			return next();
-		}
-
-		res.setHeader('access-control-allow-origin', '*');
-		res.setHeader('access-control-expose-headers', this.corsExposeHeaders);
-		return next();
-	}
-
-	preflight(req, res, next) {
-		if (req.method !== 'OPTIONS') {
-			return next();
-		}
-
-		res.once('header', () => {
-			res.header('access-control-allow-origin', '*');
-			res.header('access-control-expose-headers', this.corsExposeHeaders);
-			res.header('access-control-allow-methods', 'OPTIONS, GET, POST, PATCH, PUT, DELETE');
-			res.header('access-control-allow-headers', 'Content-Type');
-		});
-
-		res.send(204);
-		// Don't call next, this ends execution, nothing more to send.
-	}
-
 	initServer(server) {
-		server.on('restifyError', this.errorHandler.bind(this));
-		server.pre(this.preflight.bind(this));
-		server.use(restify.plugins.queryParser());
-		server.use(restify.plugins.bodyParser());
-		server.use(this.injectCorsHeader.bind(this));
+		// Enable CORS
+		server.use(cors({
+			exposedHeaders: [this.corsExposeHeaders]
+		}));
+		
+		// Parse JSON bodies
+		server.use(express.json());
+		server.use(express.urlencoded({ extended: true }));
+
+		// Error handling middleware
+		server.use((err, req, res, next) => {
+			this.errorHandler(req, res, err, next);
+		});
 
 		server.get('/', this.root.bind(this));
 		server.post('/add', this.add.bind(this));
@@ -159,18 +147,17 @@ class Server extends Config {
 	}
 
 	root(req, res, next) {
-		res.send(200, {
+		res.json({
 			stac_version: "1.1.0",
 			id: "stac-index",
 			description: "Root catalog of STAC Index.",
 			links: []
 		});
-		return next();
 	}
 
 	async add(req, res) {
 		if (!Utils.isPlainObject(req.body)) {
-			res.send(400, "No data given");
+			res.status(400).json({ error: "No data given" });
 			return;
 		}
 		switch(req.body.type) {
@@ -178,32 +165,32 @@ class Server extends Config {
 			case 'catalog':
 				try {
 					let catalog = await this.data.addCatalog(req.body.type === 'api', req.body.url, req.body.slug, req.body.title, req.body.summary, req.body.access, req.body.accessInfo, req.body.email);
-					res.send(200, catalog);
+					res.json(catalog);
 					return;
 				} catch (e) {
-					res.send(400, e.message);
+					res.status(400).json({ error: e.message });
 					return;
 				}
 			case 'ecosystem':
 				try {
 					let eco = await this.data.addEcosystem(req.body.url, req.body.title, req.body.summary, req.body.categories, req.body.language, req.body.email);
-					res.send(200, eco);
+					res.json(eco);
 					return;
 				} catch (e) {
-					res.send(400, e.message);
+					res.status(400).json({ error: e.message });
 					return;
 				}
 			case 'tutorial':
 				try {
 					let tut = await this.data.addTutorial(req.body.url, req.body.title, req.body.summary, req.body.language, req.body.tags, req.body.email);
-					res.send(200, tut);
+					res.json(tut);
 					return;
 				} catch (e) {
-					res.send(400, e.message);
+					res.status(400).json({ error: e.message });
 					return;
 				}
 		}
-		res.send(400, "Invalid type specified.");
+		res.status(400).json({ error: "Invalid type specified." });
 		return;
 	}
 
@@ -211,54 +198,46 @@ class Server extends Config {
 		let ecosystem = await this.data.getNewestEcosystem();
 		let data = await this.data.getNewestData();
 		let tutorials = await this.data.getNewestTutorials();
-		res.send({
+		res.json({
 			ecosystem,
 			data,
 			tutorials
 		});
-		return;
 	}
 
 	async ecosystem(req, res) {
-		res.send(await this.data.getEcosystem());
-		return;
+		res.json(await this.data.getEcosystem());
 	}
 
 	async tutorials(req, res) {
-		res.send(await this.data.getTutorials());
-		return;
+		res.json(await this.data.getTutorials());
 	}
 
 	async catalogs(req, res) {
-		res.send(await this.data.getCatalogs());
-		return;
+		res.json(await this.data.getCatalogs());
 	}
 
 	async spokenLanguages(req, res) {
-		res.send(this.data.getSpokenLanguages());
-		return;
+		res.json(this.data.getSpokenLanguages());
 	}
 
 	async tutorialTags(req, res) {
-		res.send(await this.data.getTutorialTags());
-		return;
+		res.json(await this.data.getTutorialTags());
 	}
 
 	async catalogById(req, res) {
 		const slug = req.params['slug'];
 		const catalog = await this.data.getCatalog(slug);
 		if (catalog) {
-			res.send(catalog);
+			res.json(catalog);
 		}
 		else {
-			res.send(404, `Catalog with slug '${slug}' doesn't exist`);
+			res.status(404).json({ error: `Catalog with slug '${slug}' doesn't exist` });
 		}
-		return;
 	}
 
 	languages(req, res, next) {
-		res.send(this.data.getLanguages());
-		return next();
+		res.json(this.data.getLanguages());
 	}
 
 	async sitemap(req, res) {
@@ -279,15 +258,14 @@ class Server extends Config {
 		let xml = urls
 			.map(r => `\t<url><loc>${baseUrl}${r[0]}</loc><priority>${r[1]}</priority><changefreq>${r[2]}</changefreq></url>`)
 			.join("\n");
-		res.header('content-type', 'application/xml');
-		res.sendRaw(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n${xml}\n</urlset>`);
-		return;
+		res.set('content-type', 'application/xml');
+		res.send(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n${xml}\n</urlset>`);
 	}
 
 	async proxy(req, res) {
 		let q = Object.keys(req.query);
 		if (q.length !== 1) {
-			res.send(400, "Query string invalid");
+			res.status(400).json({ error: "Query string invalid" });
 			return;
 		}
 
@@ -308,12 +286,11 @@ class Server extends Config {
 				throw new Error("Proxy only supports valid STAC");
 			}
 	
-			res.send(this.proxyLinks(response.data, url));
+			res.json(this.proxyLinks(response.data, url));
 		} catch (error) {
 			console.error(error);
-			res.send(400, error.message);
+			res.status(400).json({ error: error.message });
 		}
-		return;
 	}
 
 	proxyLinks(obj, baseUrl) {
