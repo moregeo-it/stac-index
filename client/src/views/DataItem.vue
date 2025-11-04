@@ -12,52 +12,59 @@
       </small>
     </div>
     <div class="styled-description summary">
-      <p v-html="parseLink(data.summary)"></p>
+      <p v-html="parseLink(data.summary)" />
     </div>
     <small class="url">
-      <b-icon icon="link" />
-      <code class="ml-1"><b-link :href="data.url" target="_blank">{{ data.url }}</b-link></code>
-      <CopyButton class="ml-2" :copyText="data.url" />
+      <BIconLink />
+      <code><b-link :href="data.url" target="_blank">{{ data.url }}</b-link></code>
+      <CopyButton :copyText="data.url" />
     </small>
   </b-list-group-item>
 </template>
 
 <script>
-import { Description } from '@openeo/vue-components';
+import { defineComponent } from 'vue';
 import CopyButton from "./DataActionButtons.vue";
 import Utils from '../utils';
 
-export default {
+export default defineComponent({
   name: 'DataItem',
   components: {
-    CopyButton,
-    Description
+    CopyButton
   },
   props: {
     data: {
-      type: Object
+      type: Object,
+      required: true
     }
   },
   methods: {
     parseLink(text) {
       return Utils.parseLink(text);
-    },
-    copy() {
-
     }
   }
-};
+});
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .header-badges {
   white-space: nowrap;
+  margin-left: 0.5em;
 }
-small.url {
-  display: block;
-  line-height: 1.25em;
-}
-small.url code {
-  font-size: 100%;
+small {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+
+  &.url {
+    flex: 1;
+
+    code {
+      font-size: 100%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
 }
 </style>

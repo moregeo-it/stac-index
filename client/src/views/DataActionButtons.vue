@@ -1,18 +1,25 @@
 <template>
   <b-button-group class="actions">
     <b-button class="copy-button" @click.prevent.stop="copy" :variant="copyColor" size="sm" title="Copy URL">
-      <b-icon :icon="copyIcon" />
+      <BIconClipboard v-if="status === null" />
+      <BIconClipboardCheck v-else-if="status === true" />
+      <BIconClipboardX v-else />
     </b-button>
-    <b-button v-if="browserUrl" class="stac-browser-button" :href="browserUrl" :variant="variant" target="blank" size="sm" title="Open in STAC Browser">
-      <b-icon icon="box-arrow-up-right" />
+    <b-button 
+      v-if="browserUrl" class="stac-browser-button" :href="browserUrl"
+      :variant="variant" target="blank" size="sm"
+      title="Open in STAC Browser"
+    >
+      <BIconBoxArrowUpRight />
     </b-button>
   </b-button-group>
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import { Clipboard } from "v-clipboard";
 
-export default {
+export default defineComponent({
     name: "DataActionButtons",
     props: {
         copyText: {
@@ -43,27 +50,16 @@ export default {
             }
             return variant;
         },
-        copyIcon() {
-            if (this.status === true) {
-                return 'clipboard-check';
-            }
-            else if (this.status === false) {
-                return 'clipboard-x';
-            }
-            else {
-                return 'clipboard';
-            }
-        },
         browserUrl() {
             try {
                 const url = new URL(this.copyText);
                 const parts = [];
-                if (url.protocol !== 'https') {
+                if (url.protocol !== 'https:') {
                     parts.push(url.protocol + ':');
                 }
                 parts.push(url.host);
                 parts.push(url.pathname.replace(/^\//, ''));
-                const path = parts.join('/');
+                let path = parts.join('/');
                 if (url.search) {
                     path += url.search;
                 }
@@ -89,7 +85,7 @@ export default {
             setTimeout(() => this.status = null, 2500);
         }
     }
-};
+});
 </script>
 
 <style>

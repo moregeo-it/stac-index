@@ -2,22 +2,22 @@
   <b-container class="content catalogs">
     <h1>Data</h1>
     <p>A list of STAC APIs and static STAC catalogs.</p>
-    <b-spinner v-if="data === null" label="Loading..."></b-spinner>
+    <b-spinner v-if="data === null" label="Loading..." />
     <b-alert v-else-if="typeof data === 'string'" variant="danger" show>{{ data }}</b-alert>
     <template v-else>
       <h6>Filter by Type</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!type" :to="uri({type: null})">All</b-nav-item>
-        <b-nav-item :active="type === 'api'" :to="uri({type: 'api'})">APIs</b-nav-item>
-        <b-nav-item :active="type === 'static'" :to="uri({type: 'static'})">Static Catalogs</b-nav-item>
-      </b-nav>
+      <div class="filters">
+        <b-button pills size="sm" :active="!type" :to="uri({type: null})">All</b-button>
+        <b-button pills size="sm" :active="type === 'api'" :to="uri({type: 'api'})">APIs</b-button>
+        <b-button pills size="sm" :active="type === 'static'" :to="uri({type: 'static'})">Static Catalogs</b-button>
+      </div>
       <h6>Filter by Access Level</h6>
-      <b-nav pills small>
-        <b-nav-item :active="access === null" :to="uri({access: null})">All</b-nav-item>
-        <b-nav-item :active="access === 'public'" :to="uri({access: 'public'})">Public only</b-nav-item>
-        <b-nav-item :active="access === 'protected'" :to="uri({access: 'protected'})">Public &amp; Protected only</b-nav-item>
-      </b-nav>
-      <hr />
+      <div class="filters">
+        <b-button pills size="sm" :active="access === null" :to="uri({access: null})">All</b-button>
+        <b-button pills size="sm" :active="access === 'public'" :to="uri({access: 'public'})">Public only</b-button>
+        <b-button pills size="sm" :active="access === 'protected'" :to="uri({access: 'protected'})">Public &amp; Protected only</b-button>
+      </div>
+      <hr>
       <b-alert v-if="filtered.length === 0" show>No data found.</b-alert>
       <b-list-group v-else>
         <DataItem v-for="item in filtered" :key="item._id" :data="item" />
@@ -27,9 +27,10 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import DataItem from './DataItem.vue';
 
-export default {
+export default defineComponent({
   name: 'Catalogs',
   components: {
     DataItem
@@ -99,5 +100,5 @@ export default {
       return "/catalogs?" + params.join('&');
     }
   }
-}
+});
 </script>

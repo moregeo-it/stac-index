@@ -1,9 +1,6 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
-import NotFound from '../views/NotFound.vue'
-
-Vue.use(VueRouter)
+import { createRouter, createWebHistory } from 'vue-router';
+import Home from '../views/Home.vue';
+import NotFound from '../views/NotFound.vue';
 
 const routes = [
   {
@@ -50,24 +47,24 @@ const routes = [
     component: () => import(/* webpackChunkName: "privacy" */ '../views/Privacy.vue')
   },
   {
-    path: '*',
+    path: '/:pathMatch(.*)*',
     component: NotFound
   }
-]
+];
 
-const router = new VueRouter({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
   routes
-})
+});
 
 router.beforeEach((to, from, next) => {
   if (to.name) {
-    document.title = to.name + " - STAC Index"
+    document.title = to.name + " - STAC Index";
   }
   else {
-    document.title = "STAC Index"
+    document.title = "STAC Index";
   }
-  next()
-})
+  next();
+});
 
-export default router
+export default router;

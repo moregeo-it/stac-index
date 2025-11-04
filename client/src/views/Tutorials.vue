@@ -2,20 +2,20 @@
   <b-container class="content tutorials">
     <h1>Learning Resources</h1>
     <p>A list of tutorials and workshops about STAC and its ecosystem.</p>
-    <b-spinner v-if="tutorials === null" label="Loading..."></b-spinner>
+    <b-spinner v-if="tutorials === null" label="Loading..." />
     <b-alert v-else-if="typeof tutorials === 'string'" variant="danger" show>{{ tutorials }}</b-alert>
     <template v-else>
       <h6>Filter by Tags</h6>
-      <b-nav pills small class="tags">
-        <b-nav-item :active="!tag" :to="uri({tag: null})">All</b-nav-item>
-        <b-nav-item v-for="t in tags" :key="t" :active="t === tag" :to="uri({tag: t})">{{ t }}</b-nav-item>
-      </b-nav>
+      <div class="filters tags">
+        <b-button pills size="sm" :active="!tag" :to="uri({tag: null})">All</b-button>
+        <b-button pills size="sm" v-for="t in tags" :key="t" :active="t === tag" :to="uri({tag: t})">{{ t }}</b-button>
+      </div>
       <h6>Filter by Language</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!language" :to="uri({language: null})">All</b-nav-item>
-        <b-nav-item v-for="lang in languages" :key="lang.code" :active="language === lang.code" :to="uri({language: lang.code})">{{ lang.name }}</b-nav-item>
-      </b-nav>
-      <hr />
+      <div class="filters languages">
+        <b-button pills size="sm" :active="!language" :to="uri({language: null})">All</b-button>
+        <b-button pills size="sm" v-for="lang in languages" :key="lang.code" :active="language === lang.code" :to="uri({language: lang.code})">{{ lang.name }}</b-button>
+      </div>
+      <hr>
       <b-alert v-if="filtered.length === 0" show>No learning resource found.</b-alert>
       <b-list-group v-else>
         <TutorialsItem v-for="data in filtered" :key="data._id" :data="data" />
@@ -25,9 +25,10 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import TutorialsItem from './TutorialsItem.vue';
 
-export default {
+export default defineComponent({
   name: 'Tutorials',
   components: {
     TutorialsItem
@@ -129,11 +130,11 @@ export default {
       return "/learn?" + params.join('&');
     }
   }
-}
+});
 </script>
 
 <style scoped>
 .tags .nav-item {
-  	text-transform: capitalize;
+  text-transform: capitalize;
 }
 </style>
