@@ -8,7 +8,7 @@
     "client"
   ],
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "start": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
@@ -26,6 +26,7 @@
     "@openeo/vue-components": "^2.20.0",
     "axios": "^1.0.0",
     "bootstrap-vue": "^2.23.0",
+    "commonmark": "^0.31.2",
     "core-js": "^3.6.5",
     "lodash": "^4.17.20",
     "node-polyfill-webpack-plugin": "^4.1.0",
@@ -40,6 +41,8 @@
     "@vue/cli-plugin-babel": "^5.0.0",
     "@vue/cli-plugin-router": "^5.0.0",
     "@vue/cli-service": "^5.0.0",
+    "sass": "^1.93.3",
+    "sass-loader": "^16.0.6",
     "vue-template-compiler": "^2.7.0"
   },
   "browserslist": [

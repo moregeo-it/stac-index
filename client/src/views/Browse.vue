@@ -41,7 +41,7 @@
 
 <script>
 import isPlainObject from 'lodash/isPlainObject';
-import { Description } from '@openeo/vue-components';
+import Description from '@openeo/vue-components/components/Description.vue';
 
 export default {
   name: 'Browse',

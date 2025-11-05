@@ -10,7 +10,7 @@ You should also [run a server](../server/README.md).
 ### Run for development (with hot-reloading)
 
 ```
-npm run serve
+npm start
 ```
 
 ### Compile and minify for production
