@@ -146,12 +146,12 @@ export default {
           }
         }
 
-        if (catalog.conformsTo && this.type === 'catalog') {
+        if (catalog?.data?.conformsTo && this.type === 'catalog') {
             this.urlHint = "The link provided seems to be a STAC API, but you have selected 'Static Catalog'. Changed the selection to 'API'. Please ensure to pick the correct type.";
             this.urlHintType = "warning";
             this.type = 'api';
         }
-        else if (!catalog.conformsTo && this.type === 'api') {
+        else if (!catalog?.data?.conformsTo && this.type === 'api') {
             this.urlHint = "The link provided seems to be a static STAC catalog, but you have selected 'API'. Changed the selection to 'Static Catalog'. Please ensure to pick the correct type.";
             this.urlHintType = "warning";
             this.type = 'catalog';
