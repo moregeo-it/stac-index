@@ -12,7 +12,8 @@
     "dev": "nodemon src/server.js --trace-warnings",
     "up": "pm2 start src/server.js",
     "down": "pm2 stop src/server.js",
-    "debug": "node --nolazy --inspect src/server.js"
+    "debug": "node --nolazy --inspect src/server.js",
+    "db:check": "node src/db-maintenance-cli.js"
   },
   "author": "Matthias Mohr",
   "license": "Apache-2.0",

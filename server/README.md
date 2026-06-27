@@ -24,3 +24,11 @@ npm run dev
 npm run up
 npm run down
 ```
+
+### Check and fix database consistency/outdated entries
+
+Runs a CLI helper that checks `catalogs`, `ecosystem` and `tutorials` for URL reachability, performs additional STAC checks for `catalogs`, and lets you select fixes interactively.
+
+```bash
+npm run db:check
+```
