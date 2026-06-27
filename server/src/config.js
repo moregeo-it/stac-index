@@ -1,4 +1,5 @@
-const { DEV, HTTP_HOST, HTTP_PATH, HTTP_INT_PORT, HTTP_PORT, DATABASE } = require('../../commons');
+const { DEV, HTTP_HOST, HTTP_PATH, HTTP_INT_PORT, HTTP_PORT } = require('../../commons');
+const DATABASE = require('../db.config');
 
 module.exports = class Config {
 	constructor() {

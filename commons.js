@@ -20,14 +20,6 @@ const HTTP_PORT = DEV ? 80 : 80;
 const HTTP_PATH = DEV ? '' : '/api';
 const HTTPS = !DEV;
 
-const DATABASE = {
-	user: 'postgres',
-	host: 'localhost',
-	database: 'stacindex',
-	password: '',
-	port: 5432
-};
-
 module.exports = {
 	LINK_REGEXP,
 	CATEGORIES,
