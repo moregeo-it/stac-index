@@ -28,6 +28,5 @@ module.exports = {
 	HTTP_PORT,
 	HTTP_INT_PORT,
 	HTTP_PATH,
-	HTTPS,
-	DATABASE
+	HTTPS
 };
