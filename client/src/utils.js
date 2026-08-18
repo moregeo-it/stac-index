@@ -23,7 +23,7 @@ export default class Utils {
 
     static escape(string) {
         return string.replace(regexEscape, $0 => escapeMap[$0]);
-    };
+    }
 
     static parseLink(text) {
         let matches = text.match(LINK_REGEXP);
@@ -35,4 +35,4 @@ export default class Utils {
         }
     }
 
-};
+}

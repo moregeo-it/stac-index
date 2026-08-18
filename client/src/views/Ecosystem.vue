@@ -2,20 +2,20 @@
   <b-container class="content ecosystem">
     <h1>Software</h1>
     <p>A list of software and tools for STAC.</p>
-    <b-spinner v-if="ecosystem === null" label="Loading..."></b-spinner>
+    <b-spinner v-if="ecosystem === null" label="Loading..." />
     <b-alert v-else-if="typeof ecosystem === 'string'" variant="danger" show>{{ ecosystem }}</b-alert>
     <template v-else>
       <h6>Filter by Category</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!category" :to="uri({category: null})">All</b-nav-item>
-        <b-nav-item v-for="cat in categories" :key="cat" :active="category === cat" :to="uri({category: cat})">{{ cat }}</b-nav-item>
-      </b-nav>
+      <div class="filters">
+        <b-button pills size="sm" :active="!category" :to="uri({category: null})">All</b-button>
+        <b-button pills size="sm" v-for="cat in categories" :key="cat" :active="category === cat" :to="uri({category: cat})">{{ cat }}</b-button>
+      </div>
       <h6>Filter by Programming Language</h6>
-      <b-nav pills small>
-        <b-nav-item :active="!language" :to="uri({language: null})">All</b-nav-item>
-        <b-nav-item v-for="lang in languages" :key="lang" :active="language === lang" :to="uri({language: lang})">{{ lang }}</b-nav-item>
-      </b-nav>
-      <hr />
+      <div class="filters">
+        <b-button pills size="sm" :active="!language" :to="uri({language: null})">All</b-button>
+        <b-button pills size="sm" v-for="lang in languages" :key="lang" :active="language === lang" :to="uri({language: lang})">{{ lang }}</b-button>
+      </div>
+      <hr>
       <b-alert v-if="filtered.length === 0" show>No tool or software found.</b-alert>
       <b-list-group v-else>
         <EcosystemItem v-for="data in filtered" :key="data._id" :data="data" />
@@ -25,9 +25,10 @@
 </template>
 
 <script>
+import { defineComponent } from 'vue';
 import EcosystemItem from './EcosystemItem.vue';
 
-export default {
+export default defineComponent({
   name: 'Ecosystem',
   components: {
     EcosystemItem
@@ -118,5 +119,5 @@ export default {
       return "/ecosystem?" + params.join('&');
     }
   }
-}
+});
 </script>
