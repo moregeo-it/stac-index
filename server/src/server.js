@@ -89,19 +89,21 @@ class Server extends Config {
 		}
 	}
 
-	errorHandler(req, res, err, next) {
+	errorHandler(err, req, res, next) {
 		if (this.debug) {
-			if (err.originalError) {
-				console.error(err.originalError);
-			}
-			else {
-				console.error(err);
-			}
+			console.error(err.originalError || err);
 		}
-		if (!res.headersSent) {
-			res.status(500).json({ error: 'Internal Server Error' });
+		if (res.headersSent) {
+			return next(err);
 		}
-		return next(err);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+
+	// Wraps a route handler so that rejected promises from async handlers are
+	// forwarded to the error-handling middleware instead of going unhandled.
+	asyncRoute(handler) {
+		handler = handler.bind(this);
+		return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 	}
 
 	async startServer() {
@@ -127,23 +129,21 @@ class Server extends Config {
 		server.use(express.json());
 		server.use(express.urlencoded({ extended: true }));
 
-		// Error handling middleware
-		server.use((err, req, res, next) => {
-			this.errorHandler(req, res, err, next);
-		});
+		server.get('/', this.asyncRoute(this.root));
+		server.post('/add', this.asyncRoute(this.add));
+		server.get('/ecosystem', this.asyncRoute(this.ecosystem));
+		server.get('/languages', this.asyncRoute(this.languages));
+		server.get('/spoken_languages', this.asyncRoute(this.spokenLanguages));
+		server.get('/tags', this.asyncRoute(this.tutorialTags));
+		server.get('/tutorials', this.asyncRoute(this.tutorials));
+		server.get('/catalogs', this.asyncRoute(this.catalogs));
+		server.get('/catalogs/:slug', this.asyncRoute(this.catalogById));
+		server.get('/newest', this.asyncRoute(this.newest));
+		server.get('/proxy', this.asyncRoute(this.proxy));
+		server.get('/sitemap.xml', this.asyncRoute(this.sitemap));
 
-		server.get('/', this.root.bind(this));
-		server.post('/add', this.add.bind(this));
-		server.get('/ecosystem', this.ecosystem.bind(this));
-		server.get('/languages', this.languages.bind(this));
-		server.get('/spoken_languages', this.spokenLanguages.bind(this));
-		server.get('/tags', this.tutorialTags.bind(this));
-		server.get('/tutorials', this.tutorials.bind(this));
-		server.get('/catalogs', this.catalogs.bind(this));
-		server.get('/catalogs/:slug', this.catalogById.bind(this));
-		server.get('/newest', this.newest.bind(this));
-		server.get('/proxy', this.proxy.bind(this));
-		server.get('/sitemap.xml', this.sitemap.bind(this));
+		// Error handling middleware (registered last so it catches route errors)
+		server.use(this.errorHandler.bind(this));
 	}
 
 	root(req, res, next) {

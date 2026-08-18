@@ -31,7 +31,7 @@ CREATE TABLE public.catalogs (
     id integer NOT NULL,
     url text NOT NULL,
     slug character varying(50) NOT NULL,
-    title character varying(50) NOT NULL,
+    title text NOT NULL,
     summary text NOT NULL,
     email character varying(255),
     access character varying(10) NOT NULL,
@@ -77,7 +77,7 @@ ALTER SEQUENCE public.catalogs_id_seq OWNED BY public.catalogs.id;
 CREATE TABLE public.ecosystem (
     id integer NOT NULL,
     url text NOT NULL,
-    title character varying(50) NOT NULL,
+    title character varying(75) NOT NULL,
     summary text NOT NULL,
     categories character varying(50)[] NOT NULL,
     email character varying(255),

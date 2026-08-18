@@ -262,10 +262,19 @@ module.exports = class Data {
 
 		access = this.checkAccess(access);
 		accessInfo = this.checkAccessInfo(access, accessInfo);
-		url = await this.checkUrl(url, access !== 'private');
+		url = this.checkUrlFormat(url);
+		// Fetch the source catalog for public/protected entries. Values that are taken
+		// verbatim from the catalog are pre-filled, so length limits don't apply to them.
+		let source = null;
+		if (access !== 'private') {
+			source = await this.fetchCatalog(url);
+			if (!source) {
+				throw new Error("The URL given returned an error. Is this a private Catalog or API?");
+			}
+		}
 		slug = this.checkSlug(slug);
-		title = this.checkTitle(title);
-		summary = this.checkSummary(summary);
+		title = this.checkTitle(title, 75, Boolean(source) && title === source.title);
+		summary = this.checkSummary(summary, Boolean(source) && summary === source.description);
 		email = this.checkEmail(email);
 		await this.checkDuplicates("catalogs", url, title);
 		if (await this.getCatalog(slug)) {
@@ -312,28 +321,38 @@ module.exports = class Data {
 	}
 	
 
-	async checkUrl(url, checkCatalog = false) {
+	checkUrlFormat(url) {
 		try {
 			require('url').parse(url);
 		} catch (e) {
 			throw new Error('URL is invalid');
 		}
+		return url;
+	}
+
+	async fetchCatalog(url) {
+		try {
+			let catalog = await axios(url);
+			if (Utils.isPlainObject(catalog.data) && typeof catalog.data.id === 'string' && typeof catalog.data.description === 'string' && Array.isArray(catalog.data.links)) {
+				return catalog.data;
+			}
+		} catch (e) {
+			// treated as unreachable below
+		}
+		return null;
+	}
+
+	async checkUrl(url, checkCatalog = false) {
+		url = this.checkUrlFormat(url);
 
 		if (!checkCatalog) {
 			return url;
 		}
 
-		try {
-			let catalog = await axios(url);
-			if (Utils.isPlainObject(catalog.data) && typeof catalog.data.id === 'string' && typeof catalog.data.description === 'string' && Array.isArray(catalog.data.links)) {
-				return url;
-			}
-			else {
-				throw new Error("A catalog can't be found at the URL given.");
-			}
-		} catch (e) {
+		if (!await this.fetchCatalog(url)) {
 			throw new Error("The URL given returned an error. Is this a private Catalog or API?");
 		}
+		return url;
 	}
 
 	checkSlug(slug) {
@@ -350,12 +369,18 @@ module.exports = class Data {
 		return slug;
 	}
 
-	checkTitle(title, maxLength = 50) {
-		let length = typeof title === 'string' ? title.length : 0;
-		if (title.length < 3) {
+	checkTitle(title, maxLength = 75, skipLimits = false) {
+		if (typeof title !== 'string' || title.length === 0) {
+			throw new Error('Title is required');
+		}
+		let length = title.length;
+		if (skipLimits) {
+			return title;
+		}
+		if (length < 3) {
 			throw new Error(`Title must be at least 3 characters, is ${length} characters`);
 		}
-		else if (title.length > maxLength) {
+		else if (length > maxLength) {
 			throw new Error(`Title must be no longer than ${maxLength} characters, is ${length} characters`);
 		}
 		return title;
@@ -383,13 +408,19 @@ module.exports = class Data {
 		return accessInfo;
 	}
 
-	checkSummary(summary) {
-		let length = typeof summary === 'string' ? summary.length : 0;
+	checkSummary(summary, skipLimits = false) {
+		if (typeof summary !== 'string' || summary.length === 0) {
+			throw new Error('Summary is required');
+		}
+		let length = summary.length;
+		if (skipLimits) {
+			return summary;
+		}
 		if (length < 50) {
 			throw new Error(`Summary must be at least 50 characters, is ${length} characters`);
 		}
-		else if (length > 300) {
-			throw new Error(`Summary must be no longer than 300 characters, is ${length} characters`);
+		else if (length > 500) {
+			throw new Error(`Summary must be no longer than 500 characters, is ${length} characters`);
 		}
 		return summary;
 	}

@@ -24,21 +24,27 @@
           <b-alert v-if="urlHint" :variant="urlHintType" show>{{ urlHint }}</b-alert>
         </b-form-group>
         <b-form-group v-if="fields.includes('title')" :label="type === 'ecosystem' ? 'Name of the software or tool:' : 'Title:'" label-for="title">
-          <b-form-input id="title" type="text" v-model="title" required minlength="3" :maxlength="maxTitleLength"></b-form-input>
-          <b-form-text>Min. 3 chars, max. {{ maxTitleLength }} chars.</b-form-text>
+          <b-form-input id="title" type="text" v-model="title" required :state="titleState"></b-form-input>
+          <b-form-text>
+            Min. 3 chars, max. {{ maxTitleLength }} chars.
+            <template v-if="titlePrefilled">Pre-filled from the resource, so length limits don't apply.</template>
+          </b-form-text>
+          <b-form-invalid-feedback :state="titleState">Title must be between 3 and {{ maxTitleLength }} characters, is {{ title ? title.length : 0 }}.</b-form-invalid-feedback>
         </b-form-group>
         <b-form-group v-if="fields.includes('slug')" label="Slug" label-for="title">
           <b-form-input id="slug" type="text" v-model="slug" required minlength="3" maxlength="50" @keydown="stopSlugGen" @mousedown="stopSlugGen"></b-form-input>
           <b-form-text>Short identifier for the URL. Min. 3 chars, max. 50 chars. Allowed chars: <code>a-z</code>, <code>0-9</code>, <code>-</code></b-form-text>
         </b-form-group>
         <b-form-group v-if="fields.includes('summary')" label="Summary:" label-for="summary">
-          <b-form-textarea id="summary" v-model="summary" rows="3" required minlength="50" maxlength="300"></b-form-textarea>
+          <b-form-textarea id="summary" v-model="summary" rows="3" required :state="summaryState"></b-form-textarea>
           <b-form-text>
-            Short summary about the {{ formTitle }}. Min. 50 chars, max. 300 chars, currently {{ summary ? summary.length : 0 }} chars.
+            Short summary about the {{ formTitle }}. Min. 50 chars, max. 500 chars, currently {{ summary ? summary.length : 0 }} chars.
             <template v-if="type !== 'tutorial'">
               One CommonMark (Markdown) style link allowed.
             </template>
+            <template v-if="summaryPrefilled">Pre-filled from the resource, so length limits don't apply.</template>
           </b-form-text>
+          <b-form-invalid-feedback :state="summaryState">Summary must be between 50 and 500 characters, is {{ summary ? summary.length : 0 }}.</b-form-invalid-feedback>
         </b-form-group>
         <b-form-group v-if="fields.includes('categories')" label="Categories:" label-for="categories">
           <multiselect v-model="categories" :options="categoryList" :multiple="true" :taggable="true"></multiselect>
@@ -116,6 +122,8 @@ export default {
       slug: '',
       title: null,
       summary: null,
+      prefilledTitle: null,
+      prefilledSummary: null,
       language: null,
       categories: [],
       tags: [],
@@ -163,9 +171,11 @@ export default {
           }
           if (typeof catalog.data.title === 'string' && !this.title && catalog.data.title !== 'stac-fastapi') {
             this.title = catalog.data.title;
+            this.prefilledTitle = catalog.data.title;
           }
           if (typeof catalog.data.description === 'string' && !this.summary) {
             this.summary = catalog.data.description;
+            this.prefilledSummary = catalog.data.description;
           }
           if (this.urlHintType === 'info') {
             this.urlHint = "Catalog found. Inserting some data from the catalog for you...";
@@ -213,7 +223,25 @@ export default {
       }
     },
     maxTitleLength() {
-      return this.type === 'tutorial' ? 200 : 50;
+      return this.type === 'tutorial' ? 200 : 75;
+    },
+    titlePrefilled() {
+      return typeof this.title === 'string' && this.title.length > 0 && this.title === this.prefilledTitle;
+    },
+    summaryPrefilled() {
+      return typeof this.summary === 'string' && this.summary.length > 0 && this.summary === this.prefilledSummary;
+    },
+    titleState() {
+      if (this.titlePrefilled || typeof this.title !== 'string' || this.title.length === 0) {
+        return null;
+      }
+      return this.title.length >= 3 && this.title.length <= this.maxTitleLength;
+    },
+    summaryState() {
+      if (this.summaryPrefilled || typeof this.summary !== 'string' || this.summary.length === 0) {
+        return null;
+      }
+      return this.summary.length >= 50 && this.summary.length <= 500;
     },
     fields() {
       let fields = ['url', 'title', 'summary', 'email'];
@@ -281,6 +309,8 @@ export default {
       this.url = null;
       this.title = null;
       this.summary = null;
+      this.prefilledTitle = null;
+      this.prefilledSummary = null;
       this.language = null,
       this.categories = [];
       this.tags = [];
@@ -291,6 +321,11 @@ export default {
     },
     async onSubmit(evt) {
       evt.preventDefault();
+      if (this.titleState === false || this.summaryState === false) {
+        this.confirmation = null;
+        this.error = "Please fix the highlighted fields before submitting.";
+        return;
+      }
       try {
         await this.$axios.post('/add', this.getData());
         this.error = null;
@@ -298,7 +333,16 @@ export default {
         this.reset();
       } catch (error) {
         this.confirmation = null;
-        this.error = error.response.data;
+        let data = error.response && error.response.data;
+        if (data && typeof data.error === 'string') {
+          this.error = data.error;
+        }
+        else if (typeof data === 'string' && data.length > 0) {
+          this.error = data;
+        }
+        else {
+          this.error = error.message || "An unknown error occurred while submitting the data.";
+        }
       }
     },
     getData() {
